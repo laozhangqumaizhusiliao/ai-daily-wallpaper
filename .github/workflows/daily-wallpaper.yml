@@ -1,0 +1,59 @@
+# 每日自动生成 AI 日报壁纸并发布到 GitHub Pages
+# 每天 06:00（北京时间）跑一次：抓最新 AI 新闻 → 渲染成 wallpaper.png → 推到 gh-pages 分支
+name: daily-wallpaper
+
+on:
+  schedule:
+    # cron 用 UTC。每天 22:00 UTC = 次日 06:00 北京
+    - cron: '0 22 * * *'
+  workflow_dispatch: {}        # 允许手动触发一次
+
+permissions:
+  contents: write              # 允许把生成的 PNG 推回 gh-pages 分支
+
+# 只保留一次运行，避免排队堆积
+concurrency:
+  group: wallpaper-gen
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout（含字体 assets）
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装依赖
+        run: npm ci --ignore-scripts || npm install
+
+      - name: 生成当日壁纸
+        env:
+          # 壁纸天气城市（需与 Kindle 插件「我的城市」设为一致）
+          CITY: 合肥
+        run: node generate.js
+
+      - name: 推送 wallpaper.png 到 gh-pages 分支
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 若 gh-pages 分支存在则切换，否则从当前 HEAD 新建孤立分支
+          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages
+            git checkout --force gh-pages
+          else
+            git checkout --orphan gh-pages
+          fi
+          # 只保留一张 wallpaper.png + .nojekyll，清掉其余提交产物
+          git rm -rf --ignore-unmatch . >/dev/null 2>&1 || true
+          cp "${{ github.workspace }}/output/wallpaper.png" ./wallpaper.png
+          touch .nojekyll
+          git add wallpaper.png .nojekyll
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "daily wallpaper $(date -u +%Y-%m-%dT%H:%MZ)" || echo "无变化，跳过"
+          git push --force origin gh-pages

@@ -1,0 +1,16 @@
+{
+  "name": "ai-daily-wallpaper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "每日 AI 资讯墨水屏壁纸源（供 KOReader DashWallpaper 插件下载）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.8"
+  }
+}
