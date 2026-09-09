@@ -3,3 +3,4 @@ node_modules/
 preview.png
 # 每日生成的 PNG 由 GitHub Actions 直接推到 gh-pages 分支，不进入源码提交历史
 output/
+.workbuddy/
