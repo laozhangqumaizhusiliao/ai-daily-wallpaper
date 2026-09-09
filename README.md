@@ -21,7 +21,7 @@
 
 壁纸静态 URL（仓库设好后）：
 ```
-https://<你的GitHub用户名>.github.io/<仓库名>/wallpaper.png
+https://laozhangqumaizhusiliao.github.io/ai-daily-wallpaper/wallpaper.png
 ```
 
 ## 目录结构
@@ -59,8 +59,15 @@ CITY="上海" node generate.js     # 产物在 output/wallpaper.png
 `dashwall_sources.txt`（推送到 KOReader 数据目录后，插件「看板壁纸源 → 从文件
 导入」）：
 ```
-AI 日报	https://<用户名>.github.io/<仓库名>/wallpaper.png
+AI 日报	https://laozhangqumaizhusiliao.github.io/ai-daily-wallpaper/wallpaper.png
 ```
+
+## 首次上线必须做的两件事
+
+1. **跑一次生成**：仓库 → Actions → `daily-wallpaper` → Run workflow（等它跑完才会出现 `gh-pages` 分支和 `wallpaper.png`）。
+2. **开启 Pages**：仓库 → Settings → Pages → Build and deployment → Source 选 **Deploy from a branch** → 分支选 **gh-pages**、目录选 **/root** → Save。
+
+两者都完成后，上面的 URL 才能返回图片；之前访问会 404。之后每天 06:00（北京时间）自动更新，Kindle 侧无需再改动。
 
 ## 手动触发一次
 
