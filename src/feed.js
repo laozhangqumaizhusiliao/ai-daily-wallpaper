@@ -332,7 +332,7 @@ async function loadWeather(city, timeoutMs) {
     const now = new Date();
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + coords[0] + '&longitude=' + coords[1]
       + '&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m'
-      + '&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1';
+      + '&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=1';
     const res = await fetch(url, { signal: ac.signal, headers: { 'user-agent': UA } });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
@@ -342,13 +342,16 @@ async function loadWeather(city, timeoutMs) {
     const dMax = j.daily && j.daily.temperature_2m_max && j.daily.temperature_2m_max[0];
     const dMin = j.daily && j.daily.temperature_2m_min && j.daily.temperature_2m_min[0];
     const avg = (dMax !== undefined && dMin !== undefined) ? Math.round((dMax + dMin) / 2) : Math.round(cur.temperature_2m);
+    // 天气现象优先用"当天"的 weather_code：清晨生成时用当前实况，
+    // 可能与白天的实际天气对不上（如清晨晴、白天转阴雨）
+    const dayCode = (j.daily && j.daily.weather_code && j.daily.weather_code[0]);
     return {
       city,
       tempC: Math.round(cur.temperature_2m),
       avg: avg,
       hi: dMax !== undefined ? Math.round(dMax) : null,
       lo: dMin !== undefined ? Math.round(dMin) : null,
-      desc: WMO_CODE[cur.weather_code] || '',
+      desc: WMO_CODE[dayCode !== undefined ? dayCode : cur.weather_code] || '',
       humidity: cur.relative_humidity_2m,
       wind: cur.wind_speed_10m,
     };

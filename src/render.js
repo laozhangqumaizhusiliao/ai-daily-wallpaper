@@ -277,9 +277,18 @@ function renderWallpaper(opts) {
 
   ctx.font = `${Math.round(26 * s)}px ${F_REG}`;
   ctx.fillStyle = '#444444';
-  const headRight = weather
-    ? `${weather.city} · ${weather.desc} · ${weather.tempC}°C`
-    : `${d.ymd} ${d.week}`;
+  // 报头右上：城市 · 当日天气 · 全天温度区间。
+  // 用最低~最高而非生成时刻的实况温度——壁纸一整天不变，
+  // 单点温度到下午就会"对不上"，区间全天都成立。
+  let headRight;
+  if (weather) {
+    const tempTxt = (weather.lo !== null && weather.hi !== null)
+      ? `${weather.lo}~${weather.hi}°C`
+      : `${weather.tempC}°C`;
+    headRight = `${weather.city} · ${weather.desc} · ${tempTxt}`;
+  } else {
+    headRight = `${d.ymd} ${d.week}`;
+  }
   ctx.fillText(headRight, bw - M - ctx.measureText(headRight).width, 44 * s);
 
   ctx.font = `${Math.round(24 * s)}px ${F_REG}`;
