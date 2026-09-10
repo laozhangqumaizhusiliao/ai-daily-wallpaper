@@ -4,9 +4,11 @@ name: daily-wallpaper
 
 on:
   schedule:
-    # cron 用 UTC。22:00 UTC = 北京 06:00（早报）；13:00 UTC = 北京 21:00（晚报）
-    - cron: '0 22 * * *'
-    - cron: '0 13 * * *'
+    # cron 用 UTC。16:00 UTC = 北京 00:00（次日凌晨）。
+    # Kindle 插件每天只拉取一次（过设定时刻后的第一次联网补做），
+    # 仓库只需在拉取前就绪一次即可；选凌晨生成是为了即使 Actions
+    # 延迟 1-2 小时，也稳稳赶在早间拉取之前。
+    - cron: '0 16 * * *'
   workflow_dispatch: {}        # 允许手动触发一次
 
 permissions:
