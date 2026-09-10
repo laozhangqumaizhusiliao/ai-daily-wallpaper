@@ -319,23 +319,39 @@ function renderWallpaper(opts) {
   let drawn = 0;
   const drawnPerGroup = [];
 
+  // 中英文各占约一半版面：先按总行容量估出配额，再开画。
+  // 否则中文组先画会把空间占满，英文组只剩页脚上一两条。
+  {
+    const overhead = groups.length * (GROUP_H + GROUP_BELOW) + (groups.length - 1) * GROUP_ABOVE;
+    const totalRows = Math.max(1, Math.floor((listBottom - listTop - overhead) / ROW_H));
+    const halfRows = Math.ceil(totalRows / 2);
+    // 某组条目不足配额时，富余行数让给下一组，保证版面不空
+    let spare = 0;
+    for (const g of groups) {
+      const target = halfRows + spare;
+      const cap = Math.min(g.list.length, target);
+      spare = target - cap;
+      g.cap = cap;
+    }
+  }
+
   for (let gi = 0; gi < groups.length; gi++) {
     const g = groups[gi];
     if (gi > 0) y += GROUP_ABOVE;
     if (y + GROUP_H + Math.round(ROW_H * 0.6) > listBottom) break;
 
-    // 黑色分组条：组名 + 计数
+    // 黑色分组条：组名 + 计数（计数需等画完才知道实际条数，位置先记下）
+    const cntY = y + 7 * s;
     ctx.fillStyle = '#000000';
     ctx.fillRect(M, y, CW, GROUP_H);
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${Math.round(22 * s)}px ${F_BOLD}`;
-    ctx.fillText(g.name, M + 12 * s, y + 7 * s);
-    const cnt = String(g.list.length);
-    ctx.fillText(cnt, M + CW - 12 * s - ctx.measureText(cnt).width, y + 7 * s);
+    ctx.fillText(g.name, M + 12 * s, cntY);
     y += GROUP_H + GROUP_BELOW;
 
     let n = 0;
-    for (let i = 0; i < g.list.length; i++) {
+    const cap = g.cap || g.list.length;
+    for (let i = 0; i < g.list.length && n < cap; i++) {
       if (y + ROW_H > listBottom) break;
       const it = g.list[i];
 
@@ -388,6 +404,12 @@ function renderWallpaper(opts) {
       y += ROW_H;
       n++;
     }
+    // 实际展示条数补画到分组条右侧
+    const cnt = String(n);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.round(22 * s)}px ${F_BOLD}`;
+    ctx.fillText(cnt, M + CW - 12 * s - ctx.measureText(cnt).width, cntY);
+
     drawnPerGroup.push({ name: g.name, count: n });
     drawn += n;
     if (y + ROW_H > listBottom && n < g.list.length) break;
