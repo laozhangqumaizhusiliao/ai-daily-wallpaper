@@ -1,5 +1,6 @@
 # 每日自动生成 AI 日报壁纸并发布到 GitHub Pages
-# 每天 06:00（北京时间）跑一次：抓最新 AI 新闻 → 渲染成 wallpaper.png → 推到 gh-pages 分支
+# 每天 00:00（北京时间，即前一日 16:00 UTC）跑一次：
+# 抓最新 AI 新闻 → 渲染成 wallpaper.png → 推到 gh-pages 分支
 name: daily-wallpaper
 
 on:
@@ -22,6 +23,10 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      # runner 默认 UTC；虽已在 render.js 内固定按北京时间换算，
+      # 这里再设一次双保险（改动 yml 时请勿删除）
+      TZ: Asia/Shanghai
     steps:
       - name: Checkout（含字体 assets）
         uses: actions/checkout@v5

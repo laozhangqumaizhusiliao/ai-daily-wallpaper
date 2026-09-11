@@ -190,13 +190,20 @@ function shortenToFit(ctx, text, maxW, maxLines) {
   return r.lines.length ? r.lines : [best];
 }
 
-function fmtDate(d) {
+// 日期一律按北京时间（UTC+8）计算，不依赖运行环境：
+// GitHub Actions 的 runner 默认是 UTC，凌晨生成时会算成"昨天"，
+// 而工作流里的 TZ 设置容易在改动 yml 时被覆盖丢失，所以在代码里固定换算。
+const BJ_OFFSET_MS = 8 * 3600 * 1000;
+
+function fmtDate(input) {
+  const ts = (input instanceof Date) ? input.getTime() : input;
+  const d = new Date((ts || Date.now()) + BJ_OFFSET_MS);
   const wd = ['日', '一', '二', '三', '四', '五', '六'];
   const p = n => String(n).padStart(2, '0');
   return {
-    ymd: `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`,
-    week: '星期' + wd[d.getDay()],
-    short: `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`,
+    ymd: `${d.getUTCFullYear()}年${d.getUTCMonth() + 1}月${d.getUTCDate()}日`,
+    week: '星期' + wd[d.getUTCDay()],
+    short: `${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`,
   };
 }
 
